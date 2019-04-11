@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/mam-golib/pkg/conf"
+	"github.com/matobi/mam-golib/pkg/conf"
 )
 
 const (
