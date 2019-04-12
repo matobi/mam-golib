@@ -35,8 +35,8 @@ func (e *Error) Code(code int) *Error {
 	return e
 }
 
-func (e *Error) Temp() *Error {
-	e.IsTemp = true
+func (e *Error) Temp(isTemp bool) *Error {
+	e.IsTemp = isTemp
 	return e
 }
 
