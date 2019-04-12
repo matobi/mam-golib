@@ -149,7 +149,7 @@ func RemoveFile(path string) {
 		return // Don't delete dir
 	}
 	if err := os.Remove(path); err != nil {
-		log.Printf("RemoveFile failed; path=%s; err=%+v\n", path, err)
+		log.Printf("RemoveFile failed; path=%s; err=%v\n", path, err)
 	}
 }
 
@@ -251,7 +251,7 @@ func SaveXML(f string, iface interface{}) error {
 	return ioutil.WriteFile(f, content, 0644)
 }
 
-// LoadJSON Read json from file.
+// LoadXML Read json from file.
 func LoadXML(f string, iface interface{}) error {
 	raw, err := ioutil.ReadFile(f)
 	if err != nil {
@@ -356,14 +356,12 @@ func ChownR(path string, uid, gid int) error {
 // RunCmd Run command and use current proc stdout/stderr.
 func RunCmd(cmdName string, cmdArgs []string) error {
 	cmdLog := fmt.Sprintf("%s %s", cmdName, strings.Join(cmdArgs, " "))
-	//log.Info().Str("cmd", cmdLog).Msg("will execute command")
-
 	cmd := exec.Command(cmdName, cmdArgs...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
-		return fmt.Errorf("failed execute command; cmd=%s; err=%+v", cmdLog, err)
+		return fmt.Errorf("failed execute command; cmd=%s; err=%v", cmdLog, err)
 	}
 	return nil
 }
@@ -371,11 +369,9 @@ func RunCmd(cmdName string, cmdArgs []string) error {
 // RunCmdWithOutput Run command and return stdout.
 func RunCmdWithOutput(cmdName string, cmdArgs []string) ([]byte, error) {
 	cmdLog := fmt.Sprintf("%s %s", cmdName, strings.Join(cmdArgs, " "))
-	//log.Info().Str("cmd", cmdLog).Msg("will execute command")
-
 	out, err := exec.Command(cmdName, cmdArgs...).Output()
 	if err != nil {
-		return []byte(""), fmt.Errorf("failed execute command; cmd=%s; err=%+v", cmdLog, err)
+		return []byte(""), fmt.Errorf("failed execute command; cmd=%s; err=%v", cmdLog, err)
 	}
 	return out, nil
 }

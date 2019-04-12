@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/pkg/errors"
+	"github.com/matobi/mam-golib/pkg/errid"
 )
 
 const (
@@ -26,14 +26,7 @@ type Caller struct {
 	user        string
 	pwd         string
 	headers     map[string]string
-	//outHeaders []keyValue
-	//webErr      *WebError
 }
-
-// type keyValue struct {
-// 	key   string
-// 	value string
-// }
 
 type input struct {
 	contentType string
@@ -49,16 +42,13 @@ func NewCaller(method, url string) *Caller {
 }
 
 func (c *Caller) SetHeader(name, value string) *Caller {
-	//c.headers = append(c.headers, keyValue{key: name, value: value})
 	c.headers[name] = value
 	return c
 }
 
 func (c *Caller) GetHeader(name string) (string, bool) {
-	// c.headers = append(c.headers, keyValue{key: name, value: value})
 	v, found := c.headers[name]
 	return v, found
-	//return "", c.headers[name]
 }
 
 func (c *Caller) Accept(t string) *Caller {
@@ -101,11 +91,11 @@ func (c *Caller) getInBuffer(in interface{}) (*bytes.Buffer, error) {
 	}
 	if c.contentType == ContentJSON {
 		if err := json.NewEncoder(buf).Encode(in); err != nil {
-			return nil, errors.Wrapf(NewWebError(err, c.URL, http.StatusInternalServerError), "failed encode json")
+			return nil, errid.New("failed encode json").Cause(err).URL(c.URL)
 		}
 	} else if c.contentType == ContentXML {
 		if err := xml.NewEncoder(buf).Encode(in); err != nil {
-			return nil, errors.Wrapf(NewWebError(err, c.URL, http.StatusInternalServerError), "failed encode xml")
+			return nil, errid.New("failed encode xml").Cause(err).URL(c.URL)
 		}
 	}
 	return buf, nil
@@ -119,8 +109,7 @@ func (c *Caller) Call(client *http.Client, in interface{}, out interface{}) erro
 
 	req, err := http.NewRequest(c.Method, c.URL, buf)
 	if err != nil {
-		return errors.Wrapf(NewWebError(err, c.URL, http.StatusInternalServerError), "failed to create request")
-		//return NewWebError(errors.Wrap(err, "failed to create request"), c.URL, http.StatusInternalServerError)
+		return errid.New("failed create request").Cause(err).URL(c.URL)
 	}
 	if in != nil && c.contentType != "" {
 		req.Header.Set("Content-Type", c.contentType)
@@ -138,7 +127,7 @@ func (c *Caller) Call(client *http.Client, in interface{}, out interface{}) erro
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return errors.Wrapf(NewWebError(err, c.URL, http.StatusBadGateway), "failed to call url")
+		return errid.New("failed call url").Cause(err).URL(c.URL).Code(resp.StatusCode)
 	}
 	defer resp.Body.Close()
 
@@ -148,13 +137,11 @@ func (c *Caller) Call(client *http.Client, in interface{}, out interface{}) erro
 			continue // todo: currently only handles single value headers
 		}
 		c.headers[k] = v[0]
-		//c.headers = append(c.headers, keyValue{key: k, value: v[0]})
 	}
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		DiscardBody(resp)
-		// todo: log reply body
-		return errors.Wrapf(NewWebError(fmt.Errorf("http error code reply; code=%d", resp.StatusCode), c.URL, resp.StatusCode), "")
+		return errid.New(fmt.Sprintf("http err reply: %s", resp.Status)).URL(c.URL).Code(resp.StatusCode)
 	}
 
 	if out == nil {
@@ -164,17 +151,17 @@ func (c *Caller) Call(client *http.Client, in interface{}, out interface{}) erro
 
 	if c.accept == ContentXML {
 		if err := xml.NewDecoder(resp.Body).Decode(out); err != nil {
-			return errors.Wrapf(NewWebError(err, c.URL, http.StatusInternalServerError), "failed decode response")
+			return errid.New("failed decode reply xml").Cause(err).URL(c.URL)
 		}
 	} else if c.accept == ContentJSON {
 		if err := json.NewDecoder(resp.Body).Decode(out); err != nil {
-			return errors.Wrapf(NewWebError(err, c.URL, http.StatusInternalServerError), "failed decode response")
+			return errid.New("failed decode reply json").Cause(err).URL(c.URL)
 		}
 	} else if c.accept == ContentPlain {
 		if v, ok := out.(*string); ok {
 			buf, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				return errors.Wrapf(NewWebError(err, c.URL, http.StatusInternalServerError), "failed read text/plain response")
+				return errid.New("failed read response").Cause(err).URL(c.URL)
 			}
 			*v = string(buf)
 		}

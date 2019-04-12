@@ -3,16 +3,15 @@ package ws
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/matobi/mam-golib/pkg/errid"
 )
 
 // ReplyJSON Return a json object to http.
 func ReplyJSON(w http.ResponseWriter, data interface{}) error {
 	b, err := json.MarshalIndent(data, "", " ")
 	if err != nil {
-		return NewWebErrorMsg(err, "failed marshal json", http.StatusInternalServerError)
-		//errw := errors.Wrap(err, "")
-		//log.Error().Err(err).Msg("failed marshal json")
-		//return http.StatusInternalServerError, errw
+		return errid.New("failed marshal json").Cause(err)
 	}
 	return ReplyRawJSON(w, b)
 }
@@ -26,5 +25,5 @@ func ReplyRawJSON(w http.ResponseWriter, rawJSON []byte) error {
 
 // ReplyError Return a error message and status code to http
 func ReplyError(w http.ResponseWriter, err error) {
-	http.Error(w, err.Error(), GetErrCode(err))
+	http.Error(w, err.Error(), errid.GetCode(err))
 }
