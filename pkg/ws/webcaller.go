@@ -127,7 +127,7 @@ func (c *Caller) Call(client *http.Client, in interface{}, out interface{}) erro
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return errid.New("failed call url").Cause(err).URL(c.URL).Code(resp.StatusCode)
+		return errid.New("failed call url").Cause(err).URL(c.URL)
 	}
 	defer resp.Body.Close()
 
