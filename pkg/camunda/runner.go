@@ -40,6 +40,7 @@ func (c *Client) Run(taskChan chan<- Task) {
 		timeNextPoll = time.Now() // poll again if we found a task
 	}
 	close(taskChan)
+	c.lw.Info("camunda Run finished")
 }
 
 // ProcessTasks Receives Tasks from channel and calls matching TaskHandlerFunc.
@@ -68,5 +69,5 @@ func (c *Client) ProcessTasks(handlers map[string]TaskHandlerFunc, taskChan <-ch
 			c.lw.Err("could not complete camunda task", err, "externalId", externalID, "procdefKey", task.Key, "activityId", task.ActivityID, "topic", task.TopicName, "businessKey", task.BusinessKey)
 		}
 	}
-	c.lw.Info("processTasks end")
+	c.lw.Info("camunda processTasks finished")
 }

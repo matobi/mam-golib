@@ -141,7 +141,9 @@ func (c *Caller) Call(client *http.Client, in interface{}, out interface{}) erro
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		DiscardBody(resp)
-		return errid.New(fmt.Sprintf("http err reply: %s", resp.Status)).URL(c.URL).Code(resp.StatusCode)
+		isTemp := resp.StatusCode != http.StatusBadRequest
+		msg := fmt.Sprintf("http err reply: %s", resp.Status)
+		return errid.New(msg).URL(c.URL).Code(resp.StatusCode).Temp(isTemp)
 	}
 
 	if out == nil {
