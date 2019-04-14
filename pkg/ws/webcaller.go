@@ -127,9 +127,6 @@ func (c *Caller) Call(client *http.Client, in interface{}, out interface{}) erro
 
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Printf("err=%v\n", err)
-		fmt.Printf("c=%p\n", c)
-		fmt.Printf("c.URL=%s\n", c.URL)
 		return errid.New("failed call url").Cause(err).URL(c.URL)
 	}
 	defer resp.Body.Close()
