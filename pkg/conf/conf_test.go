@@ -11,7 +11,7 @@ const (
 )
 
 func TestEmpty(t *testing.T) {
-	c := NewConfig("")
+	c := NewConfig("test")
 	_, err := c.LogAndValidate()
 	if err != nil {
 		t.Errorf("empty cfg not validated")
@@ -30,7 +30,7 @@ func TestAddGet(t *testing.T) {
 		{VtInt, "int2", "123456789"},
 		{VtInt, "int3", "-12345"},
 	}
-	c := NewConfig("")
+	c := NewConfig("test")
 	for _, d := range data {
 		c.Add(d.t, d.name, d.value)
 	}

@@ -26,10 +26,17 @@ type Config struct {
 }
 
 func NewConfig(profile string) *Config {
+	if profile == "" {
+		profile = os.Getenv("profile")
+	}
 	conf := &Config{
 		Values: make(map[string]string),
 		Lists:  make(map[string][]string),
 		Errors: []error{},
+	}
+	if profile == "" {
+		conf.addErr(fmt.Errorf("missing env 'profile'"))
+		profile = "missing"
 	}
 	conf.Values["profile"] = profile
 	conf.Profile = profile
@@ -43,6 +50,9 @@ func (c *Config) Add(t ValueType, name, value string) {
 }
 
 func (c *Config) AddProfile(t ValueType, profile, name, value string) {
+	// Replace all "{profile}" to actual profile value.
+	value = strings.ReplaceAll(value, "{profile}", c.Profile)
+
 	value, ok := c.validate(t, profile, name, value)
 	if !ok {
 		return
