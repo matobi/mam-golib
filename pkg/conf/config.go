@@ -50,9 +50,6 @@ func (c *Config) Add(t ValueType, name, value string) {
 }
 
 func (c *Config) AddProfile(t ValueType, profile, name, value string) {
-	// Replace all "{profile}" to actual profile value.
-	value = strings.ReplaceAll(value, "{profile}", c.Profile)
-
 	value, ok := c.validate(t, profile, name, value)
 	if !ok {
 		return
@@ -75,7 +72,7 @@ func (c *Config) AddListProfile(t ValueType, profile, name, value string) {
 	}
 	list = append(list, value)
 	c.Lists[name] = list
-	log.Printf("property list; name=%s; value=%s\n", name, value)
+	//log.Printf("property list; name=%s; value=%s\n", name, value)
 }
 
 func (c *Config) validate(t ValueType, profile, name, value string) (string, bool) {
@@ -86,7 +83,11 @@ func (c *Config) validate(t ValueType, profile, name, value string) (string, boo
 		c.addErr(fmt.Errorf("propery name was nil; value=%s", value))
 		return "", false
 	}
+
 	value = c.envOverride(name, value)
+	// Replace all "{profile}" to actual profile value.
+	value = strings.ReplaceAll(value, "{profile}", c.Profile)
+
 	if !c.isValidType(t, value) {
 		c.addErr(fmt.Errorf("propery value invalid; name=%s; value=%s", name, value))
 		return "", false
