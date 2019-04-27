@@ -24,7 +24,7 @@ func New(msg string) *Error {
 	// if ok {
 	// 	location = fmt.Sprintf("%s/%s:%d", path.Base(path.Dir(file)), path.Base(file), no)
 	// }
-	return &Error{Msg: msg, Location: getCaller(), ErrCode: defaultErrCode}
+	return &Error{Msg: msg, Location: getCaller(), ErrCode: defaultErrCode, ErrTag: "unknown"}
 }
 
 func (e *Error) URL(s string) *Error {
@@ -133,5 +133,5 @@ func GetTag(err error) string {
 	if ec, ok := err.(errtag); ok {
 		return ec.GetTag()
 	}
-	return "" // unknown error
+	return "unknown" // unknown error
 }
