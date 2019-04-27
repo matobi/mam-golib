@@ -85,7 +85,7 @@ func getCaller() string {
 	return sb.String()
 }
 
-func (e *Error) SetTag(tag string) *Error {
+func (e *Error) SetTag(tag string) error {
 	e.ErrTag = tag
 	return e
 }
