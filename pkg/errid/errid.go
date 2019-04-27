@@ -72,7 +72,7 @@ func (e *Error) GetTag() string {
 
 func getCaller() string {
 	var sb strings.Builder
-	for skip := 2; skip < 6; skip++ {
+	for skip := 2; skip < 5; skip++ {
 		_, file, no, ok := runtime.Caller(skip)
 		if !ok {
 			break
@@ -83,6 +83,11 @@ func getCaller() string {
 		sb.WriteString(fmt.Sprintf("%s/%s:%d", path.Base(path.Dir(file)), path.Base(file), no))
 	}
 	return sb.String()
+}
+
+func (e *Error) SetTag(tag string) *Error {
+	e.ErrTag = tag
+	return e
 }
 
 /////
@@ -124,6 +129,7 @@ func IsTemporary(err error) bool {
 
 type errtag interface {
 	GetTag() string
+	SetTag(tag string) error
 }
 
 func GetTag(err error) string {
@@ -134,4 +140,14 @@ func GetTag(err error) string {
 		return ec.GetTag()
 	}
 	return "unknown" // unknown error
+}
+
+func SetTag(err error, tag string) error {
+	if err == nil {
+		return err
+	}
+	if ec, ok := err.(errtag); ok {
+		return ec.SetTag(tag)
+	}
+	return err
 }
