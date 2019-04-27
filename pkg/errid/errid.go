@@ -5,24 +5,26 @@ import (
 	"net/http"
 	"path"
 	"runtime"
+	"strings"
 )
 
 type Error struct {
 	Msg      string
 	ErrCause error
 	ErrURL   string
+	ErrTag   string
 	ErrCode  int
 	IsTemp   bool
 	Location string
 }
 
 func New(msg string) *Error {
-	location := ""
-	_, file, no, ok := runtime.Caller(1)
-	if ok {
-		location = fmt.Sprintf("%s/%s:%d", path.Base(path.Dir(file)), path.Base(file), no)
-	}
-	return &Error{Msg: msg, Location: location, ErrCode: defaultErrCode}
+	// location := ""
+	// _, file, no, ok := runtime.Caller(1)
+	// if ok {
+	// 	location = fmt.Sprintf("%s/%s:%d", path.Base(path.Dir(file)), path.Base(file), no)
+	// }
+	return &Error{Msg: msg, Location: getCaller(), ErrCode: defaultErrCode}
 }
 
 func (e *Error) URL(s string) *Error {
@@ -45,10 +47,15 @@ func (e *Error) Cause(err error) *Error {
 	return e
 }
 
+func (e *Error) Tag(s string) *Error {
+	e.ErrTag = s
+	return e
+}
+
 func (e *Error) Error() string {
 	//tmpl := "error; msg=%s; loc=%s; temp=%t; code=%d; url=%s; cause=%v"
-	tmpl := `{"error":{"msg":"%s", "loc":"%s", "temp":"%t", "code":%d, "url":"%s", "cause":"%v"}}`
-	return fmt.Sprintf(tmpl, e.Msg, e.Location, e.IsTemp, e.ErrCode, e.ErrURL, e.ErrCause)
+	tmpl := `{"error":{"msg":"%s", "loc":"%s", "temp":"%t", "code":%d, "url":"%s", "tag":"%s", "cause":"%v"}}`
+	return fmt.Sprintf(tmpl, e.Msg, e.Location, e.IsTemp, e.ErrCode, e.ErrURL, e.ErrTag, e.ErrCause)
 }
 
 func (e *Error) GetCode() int {
@@ -57,6 +64,25 @@ func (e *Error) GetCode() int {
 
 func (e *Error) IsTemporary() bool {
 	return e.IsTemp
+}
+
+func (e *Error) GetTag() string {
+	return e.ErrTag
+}
+
+func getCaller() string {
+	var sb strings.Builder
+	for skip := 2; skip < 6; skip++ {
+		_, file, no, ok := runtime.Caller(skip)
+		if !ok {
+			break
+		}
+		if sb.Len() > 0 {
+			sb.WriteString("; ")
+		}
+		sb.WriteString(fmt.Sprintf("%s/%s:%d", path.Base(path.Dir(file)), path.Base(file), no))
+	}
+	return sb.String()
 }
 
 /////
@@ -92,4 +118,20 @@ func IsTemporary(err error) bool {
 		return ec.IsTemporary()
 	}
 	return false // assume not temporary
+}
+
+/////
+
+type errtag interface {
+	GetTag() string
+}
+
+func GetTag(err error) string {
+	if err == nil {
+		return ""
+	}
+	if ec, ok := err.(errtag); ok {
+		return ec.GetTag()
+	}
+	return "" // unknown error
 }
